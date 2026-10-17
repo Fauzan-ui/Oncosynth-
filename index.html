@@ -7,11 +7,200 @@
     <!-- External Dependencies: jsPDF for Reports & Mammoth for DOCX Ingestion -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
-    <link rel="stylesheet" href="styles.css">
+    <style>
+        :root {
+            --bg-base: #06080f;
+            --bg-card: #0b101d;
+            --bg-input: #020408;
+            --border-color: #1a2234;
+            --accent-cyan: #38bdf8;
+            --accent-emerald: #34d399;
+            --accent-purple: #a78bfa;
+            --accent-rose: #fb7185;
+            --accent-amber: #f59e0b;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --radius-card: 12px;
+            --radius-sm: 6px;
+            --transition-speed: 0.2s;
+        }
+        * { box-sizing: border-box; }
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            font-family: 'Segoe UI', Inter, system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 30px;
+            line-height: 1.5;
+        }
+        .workspace-container { max-width: 1600px; margin: 0 auto; }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .brand-section h1 {
+            color: var(--accent-cyan);
+            margin: 0;
+            font-size: 26px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            letter-spacing: -0.5px;
+        }
+        .subtitle { color: var(--text-muted); margin: 6px 0 0 0; font-size: 14px; }
+        .telemetry-panel { display: flex; gap: 10px; }
+        .badge {
+            background: rgba(52, 211, 153, 0.1);
+            color: var(--accent-emerald);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            border: 1px solid rgba(52, 211, 153, 0.3);
+            font-weight: 500;
+        }
+        .badge.secondary {
+            background: rgba(56, 189, 248, 0.1);
+            color: var(--accent-cyan);
+            border-color: rgba(56, 189, 248, 0.3);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(520px, 1fr));
+            gap: 30px;
+        }
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-card);
+            padding: 28px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
+            position: relative;
+        }
+        .card.full-width { grid-column: 1 / -1; }
+        .card h3 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+        }
+        .form-group { margin-bottom: 16px; }
+        .form-row { display: flex; gap: 20px; }
+        .form-row .form-group { flex: 1; }
+        label { display: block; color: var(--text-muted); font-size: 13px; margin-bottom: 8px; font-weight: 500; }
+        input, select, textarea {
+            width: 100%;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+        }
+        textarea { resize: vertical; height: 140px; font-family: inherit; }
+        button {
+            background: linear-gradient(135deg, #0284c7, #0369a1);
+            color: white;
+            border: none;
+            padding: 12px 22px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            width: 100%;
+            margin-top: 10px;
+            transition: opacity 0.2s;
+        }
+        button:hover { opacity: 0.92; }
+        .btn-success { background: linear-gradient(135deg, #059669, #047857); }
+        .btn-purple { background: linear-gradient(135deg, #a78bfa, #7c3aed); }
+        .btn-primary { background: linear-gradient(135deg, #0284c7, #0369a1); }
+        .btn-export {
+            position: absolute;
+            top: 26px;
+            right: 28px;
+            width: auto;
+            margin: 0;
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .btn-export.red-export { background: linear-gradient(135deg, #dc2626, #991b1b); }
+        .result-container { margin-top: 20px; }
+        .result-box {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            padding: 16px;
+            border-radius: var(--radius-sm);
+            color: var(--text-main);
+            font-size: 13px;
+            max-height: 320px;
+            overflow-y: auto;
+        }
+        .paper-item {
+            background: #0d1526;
+            border-left: 3px solid var(--accent-emerald);
+            padding: 12px 16px;
+            margin-bottom: 12px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+        }
+        .paper-title { color: var(--accent-cyan); font-weight: 600; font-size: 13px; margin-bottom: 4px; }
+        .paper-meta { color: var(--text-muted); font-size: 11px; }
+        .sequence-box {
+            background: var(--bg-input);
+            border: 1px solid var(--accent-purple);
+            padding: 14px;
+            border-radius: var(--radius-sm);
+            color: var(--accent-purple);
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            word-break: break-all;
+            max-height: 140px;
+            overflow-y: auto;
+        }
+        .highlight-box {
+            background: rgba(56, 189, 248, 0.04);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            padding: 16px;
+            border-radius: var(--radius-sm);
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            color: var(--accent-cyan);
+            max-height: 220px;
+            overflow-y: auto;
+        }
+        .upload-zone {
+            border: 2px dashed var(--border-color);
+            padding: 24px;
+            border-radius: var(--radius-sm);
+            text-align: center;
+            color: var(--text-muted);
+            cursor: pointer;
+            background: var(--bg-input);
+        }
+        .upload-subtext { font-size: 11px; color: var(--text-muted); margin-top: 4px; display: block; }
+        #file-input { display: none; }
+    </style>
 </head>
 <body>
     <div class="workspace-container">
-        <!-- Top Executive Navigation & Header -->
         <header class="header">
             <div class="brand-section">
                 <h1>OncoSynth AI Enterprise Workspace 🧬</h1>
@@ -23,36 +212,30 @@
             </div>
         </header>
 
-        <!-- Main Dashboard Grid -->
         <main class="grid">
-            <!-- Panel 1: Interactive Paper Search & Detailed Summary Engine -->
+            <!-- Panel 1 -->
             <section class="card" id="panel-paper-search">
                 <button class="btn-export" onclick="PDFExportEngine.exportPanel('paper-search')">Export Panel PDF</button>
                 <h3>🔍 Interactive Research Paper Hub & Summarizer</h3>
-                
                 <div class="form-group">
                     <label for="paper-search-query">Search Research Papers (e.g., "lung cancer", "KRAS G12D inhibitors")</label>
                     <input type="text" id="paper-search-query" value="lung cancer targeted therapy">
                 </div>
-                
                 <button class="btn-success" onclick="PaperSearchEngine.searchPapers()">Search Available Papers</button>
-                
                 <div class="result-container">
                     <label>Available Papers (Click any paper for detailed summary & cure integration)</label>
                     <div id="paper-list-output" class="result-box">Type a query above and click search to list papers...</div>
                 </div>
-
                 <div class="result-container" style="margin-top: 20px;">
                     <label>Detailed Paper Summary & Target Extraction</label>
                     <div id="paper-summary-output" class="highlight-box">Select a paper above to view its comprehensive summary...</div>
                 </div>
             </section>
 
-            <!-- Panel 2: Genetic Report Parser Engine -->
+            <!-- Panel 2 -->
             <section class="card" id="panel-parser">
                 <button class="btn-export" onclick="PDFExportEngine.exportPanel('analyzer')">Export Panel PDF</button>
                 <h3>🧬 Genetic Test Report Parser & Variant Identifier</h3>
-                
                 <div class="form-group">
                     <label>Upload Genetic Report File (.docx, .txt)</label>
                     <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
@@ -61,30 +244,26 @@
                     </div>
                     <input type="file" id="file-input" accept=".docx,.txt">
                 </div>
-                
                 <div class="form-group">
                     <label for="complex-patient-data">Paste Genetic Test Report / Patient Clinical Profile</label>
-                    <textarea id="complex-patient-data" placeholder="Paste NGS panel findings, VCF summary, or clinical notes...">Patient Profile: 54yo with Metastatic Lung Adenocarcinoma.
+                    <textarea id="complex-patient-data">Patient Profile: 54yo with Metastatic Lung Adenocarcinoma.
 Genomic Sequencing Report:
 1. EGFR Gene - Exon 21 L858R point mutation identified (Allele Fraction: 41.2%)
 2. TP53 Gene - Mutation in Exon 5 (R172H)
 3. KRAS Gene - Wild Type
 Clinical Notes: Resistance observed following first-generation TKI therapy.</textarea>
                 </div>
-                
                 <button class="btn-purple" onclick="ReportParserEngine.parseReport()">Parse Report & Identify Affected Genes</button>
-                
                 <div class="result-container">
                     <label>Identified Affected Genes & Precision Editing Coordinates</label>
                     <div id="analysis-output" class="highlight-box">Uploaded report findings and gene coordinates will appear here...</div>
                 </div>
             </section>
 
-            <!-- Panel 3: Sequence Designer & Cure Engine -->
+            <!-- Panel 3 -->
             <section class="card full-width" id="panel-sequence">
                 <button class="btn-export red-export" onclick="PDFExportEngine.exportFullReport()">Export Complete Report PDF</button>
                 <h3>🧪 Personalized Cure Design & Unified Report Export</h3>
-                
                 <div class="form-row">
                     <div class="form-group">
                         <label for="target-biomarker">Target Biomarker / Identified Gene Variant / Paper Target</label>
@@ -100,9 +279,7 @@ Clinical Notes: Resistance observed following first-generation TKI therapy.</tex
                         </select>
                     </div>
                 </div>
-                
                 <button class="btn-primary" onclick="SequenceDesignerEngine.generateConstruct()">Synthesize Precision Cure & Virtual Sequence</button>
-                
                 <div class="form-row" style="margin-top: 20px;">
                     <div class="form-group" style="flex: 1;">
                         <label>Generated Virtual Nucleotide / Guide Sequence (5' -> 3')</label>
